@@ -5,7 +5,7 @@ const indexingEnabled = process.env.SITE_INDEXING_ENABLED === "true" && process.
 
 export const metadata: Metadata = {
   title: "772 Notary",
-  description: "772 Notary — mobile notary services and office appointments.",
+  description: "772 Notary — mobile notary services.",
   robots: indexingEnabled
     ? { index: true, follow: true }
     : { index: false, follow: false, noarchive: true },
