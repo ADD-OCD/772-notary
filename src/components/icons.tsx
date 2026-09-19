@@ -1,0 +1,15 @@
+import type { SVGProps } from "react";
+type Props = SVGProps<SVGSVGElement>;
+const base = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+export const CalendarIcon = (p: Props) => <svg {...base} {...p}><path d="M5 3v3m14-3v3M3 9h18M5 5h14a2 2 0 0 1 2 2v14H3V7a2 2 0 0 1 2-2Z"/><path d="M7 13h3v3H7z"/></svg>;
+export const ShieldIcon = (p: Props) => <svg {...base} {...p}><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg>;
+export const MapPinIcon = (p: Props) => <svg {...base} {...p}><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>;
+export const ClockIcon = (p: Props) => <svg {...base} {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>;
+export const HomeIcon = (p: Props) => <svg {...base} {...p}><path d="m3 11 9-8 9 8M5 10v11h14V10M9 21v-7h6v7"/></svg>;
+export const DocumentIcon = (p: Props) => <svg {...base} {...p}><path d="M6 2h8l4 4v16H6zM14 2v5h5M9 12h6m-6 4h6"/></svg>;
+export const PenIcon = (p: Props) => <svg {...base} {...p}><path d="m4 20 4.5-1L20 7.5a2.1 2.1 0 0 0-3-3L5.5 16Z"/><path d="m14.5 7 3 3M3 22h12"/></svg>;
+export const HeartIcon = (p: Props) => <svg {...base} {...p}><path d="M20.8 5.8a5.3 5.3 0 0 0-7.5 0L12 7.1l-1.3-1.3a5.3 5.3 0 0 0-7.5 7.5L12 22l8.8-8.7a5.3 5.3 0 0 0 0-7.5Z"/><path d="M7.5 12h3l1-2.5 2 5 1-2.5h2"/></svg>;
+export const UsersIcon = (p: Props) => <svg {...base} {...p}><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 21v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2M15 15h2a4 4 0 0 1 4 4v2"/></svg>;
+export const MoreIcon = (p: Props) => <svg {...base} {...p}><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>;
+export const CheckIcon = (p: Props) => <svg {...base} {...p}><path d="m5 12 4 4L19 6"/></svg>;
+export const ArrowRightIcon = (p: Props) => <svg {...base} {...p}><path d="M5 12h14m-5-5 5 5-5 5"/></svg>;

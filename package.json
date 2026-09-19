@@ -1,0 +1,53 @@
+{
+  "name": "772-notary",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "dev": "node scripts/run-local.mjs next dev --hostname 127.0.0.1",
+    "build": "npm run db:generate && node scripts/run-local.mjs next build --webpack",
+    "start": "node scripts/run-local.mjs next start --hostname 127.0.0.1",
+    "lint": "node scripts/run-local.mjs eslint . --max-warnings=0",
+    "typecheck": "npm run db:generate && node scripts/run-local.mjs next typegen && node scripts/run-local.mjs tsc --noEmit",
+    "test": "node scripts/run-local.mjs tsx --conditions=react-server --test tests/*.test.ts",
+    "db:generate": "node scripts/run-local.mjs prisma generate",
+    "db:validate": "node scripts/run-local.mjs prisma validate",
+    "check": "npm run db:validate && npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "dotenv": "17.4.2",
+    "next": "16.3.5",
+    "pg": "8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@next/eslint-plugin-next": "16.3.5",
+    "@types/node": "24.13.5",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "10.10.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.12.0",
+    "prisma": "7.10.0",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "prisma": {
+      "mysql2": "3.24.4"
+    }
+  }
+}

@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BookingMode {
+  REQUEST
+  INSTANT
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  DECLINED
+  NO_SHOW
+}
+
+enum ChargeKind {
+  SERVICE
+  TRAVEL
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum RefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum ReconciliationStatus {
+  UNRECONCILED
+  RECONCILED
+  NEEDS_REVIEW
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+enum NotaryRequestStatus {
+  RECEIVED
+  UNDER_REVIEW
+  CONVERTED_TO_APPOINTMENT
+  CLOSED
+}
+
+enum RequestedService {
+  REAL_ESTATE_DOCUMENTS
+  POWER_OF_ATTORNEY
+  ESTATE_OR_TRUST_DOCUMENTS
+  HEALTHCARE_DOCUMENTS
+  BUSINESS_DOCUMENTS
+  OTHER_DOCUMENT
+}
+
+enum RequestedLocationType {
+  NOTARY_OFFICE
+  HOME_OR_RESIDENCE
+  CUSTOMER_OFFICE
+  HOSPITAL_OR_CARE_FACILITY
+  PUBLIC_LOCATION
+  OTHER_MOBILE_LOCATION
+}
+
+enum PreferredTimeOfDay {
+  MORNING
+  AFTERNOON
+  EVENING
+  FLEXIBLE
+}
+
+enum PreferredContactMethod {
+  TEXT_MESSAGE
+  PHONE_CALL
+  EMAIL
+}
+
+// Intake is intentionally separate from Appointment: a received request has not
+// been accepted, scheduled, priced, or confirmed.
+model NotaryRequest {
+  id                     String                 @id @default(uuid()) @db.Uuid
+  reference              String                 @unique @db.VarChar(24)
+  idempotencyKey         String                 @unique @db.Uuid
+  status                 NotaryRequestStatus    @default(RECEIVED)
+  service                RequestedService
+  serviceDetails         String?                @db.VarChar(120)
+  documentCount          Int
+  locationType           RequestedLocationType
+  locationName           String?                @db.VarChar(120)
+  address                 String?                @db.VarChar(160)
+  city                    String?                @db.VarChar(80)
+  postalCode              String?                @db.VarChar(5)
+  preferredDate          DateTime               @db.Date
+  preferredTimeOfDay     PreferredTimeOfDay
+  notes                   String?                @db.VarChar(300)
+  customerName            String                 @db.VarChar(120)
+  phone                   String                 @db.VarChar(40)
+  email                   String                 @db.VarChar(254)
+  preferredContactMethod PreferredContactMethod
+  acknowledgedAt         DateTime               @db.Timestamptz(3)
+  createdAt               DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime               @updatedAt @db.Timestamptz(3)
+
+  @@index([status, createdAt])
+  @@index([preferredDate])
+}
+
+model Customer {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @db.VarChar(200)
+  email        String?       @db.VarChar(254)
+  phone        String?       @db.VarChar(40)
+  appointments Appointment[]
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+
+  // Contact details are not unique: shared household contacts are valid.
+  @@index([email])
+}
+
+model Service {
+  id              String        @id @default(uuid()) @db.Uuid
+  name            String        @db.VarChar(200)
+  durationMinutes Int
+  active          Boolean       @default(true)
+  appointments    Appointment[]
+}
+
+// Version policies by inserting new rows; existing bookings reference the agreed version.
+// No default booking mode, hours, timezone, travel buffers, or cancellation cutoff.
+model SchedulingPolicy {
+  id                        String          @id @default(uuid()) @db.Uuid
+  version                   Int             @unique
+  bookingMode               BookingMode
+  timezone                  String          @db.VarChar(100)
+  bufferBeforeMinutes       Int
+  bufferAfterMinutes        Int
+  minimumNoticeMinutes      Int
+  maximumAdvanceDays        Int
+  cancellationCutoffMinutes Int?
+  rescheduleCutoffMinutes   Int?
+  businessHours             BusinessHours[]
+  blockedTimes              BlockedTime[]
+  appointments              Appointment[]
+  createdAt                 DateTime        @default(now()) @db.Timestamptz(3)
+}
+
+model BusinessHours {
+  id          String           @id @default(uuid()) @db.Uuid
+  policyId    String           @db.Uuid
+  policy      SchedulingPolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  // ISO weekday 1=Monday..7=Sunday; minutes since local midnight, [start, end).
+  weekday     Int
+  startMinute Int
+  endMinute   Int
+
+  @@unique([policyId, weekday, startMinute])
+}
+
+model BlockedTime {
+  id       String           @id @default(uuid()) @db.Uuid
+  policyId String           @db.Uuid
+  policy   SchedulingPolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  startsAt DateTime         @db.Timestamptz(3)
+  endsAt   DateTime         @db.Timestamptz(3)
+
+  @@index([policyId, startsAt])
+}
+
+// Geographic matching and fee algorithms are deferred; no fixed geographic policies.
+model ServiceArea {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @db.VarChar(200)
+  active       Boolean       @default(true)
+  appointments Appointment[]
+}
+
+model Appointment {
+  id                  String                       @id @default(uuid()) @db.Uuid
+  customerId          String                       @db.Uuid
+  customer            Customer                     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  serviceId           String                       @db.Uuid
+  service             Service                      @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  policyId            String                       @db.Uuid
+  policy              SchedulingPolicy             @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  serviceAreaId       String?                      @db.Uuid
+  serviceArea         ServiceArea?                 @relation(fields: [serviceAreaId], references: [id], onDelete: Restrict)
+  status              AppointmentStatus            @default(REQUESTED)
+  startsAt            DateTime                     @db.Timestamptz(3)
+  endsAt              DateTime                     @db.Timestamptz(3)
+  timezone            String                       @db.VarChar(100)
+  serviceName         String                       @db.VarChar(200)
+  durationMinutes     Int
+  bufferBeforeMinutes Int
+  bufferAfterMinutes  Int
+  location            String                       @db.VarChar(500)
+  operationalNotes    String?                      @db.VarChar(2000)
+  currency            String                       @db.VarChar(3)
+  managementTokens    AppointmentManagementToken[]
+  charges             Charge[]
+  payments            Payment[]
+  mileage             MileageEntry[]
+  expenses            Expense[]
+  createdAt           DateTime                     @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                     @updatedAt @db.Timestamptz(3)
+
+  @@unique([id, currency])
+  @@index([customerId])
+  @@index([serviceId])
+  @@index([policyId])
+  @@index([serviceAreaId])
+  @@index([status, startsAt])
+}
+
+model AppointmentManagementToken {
+  id            String      @id @default(uuid()) @db.Uuid
+  appointmentId String      @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  tokenHash     String      @unique @db.Char(64)
+  expiresAt     DateTime    @db.Timestamptz(3)
+  revokedAt     DateTime?   @db.Timestamptz(3)
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@index([appointmentId])
+  @@index([expiresAt])
+}
+
+model Charge {
+  id            String      @id @default(uuid()) @db.Uuid
+  appointmentId String      @db.Uuid
+  currency      String      @db.VarChar(3)
+  appointment   Appointment @relation(fields: [appointmentId, currency], references: [id, currency], onDelete: Restrict)
+  kind          ChargeKind
+  description   String      @db.VarChar(200)
+  amountMinor   Int
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@index([appointmentId, currency])
+}
+
+model Payment {
+  id                   String               @id @default(uuid()) @db.Uuid
+  appointmentId        String               @db.Uuid
+  currency             String               @db.VarChar(3)
+  appointment          Appointment          @relation(fields: [appointmentId, currency], references: [id, currency], onDelete: Restrict)
+  amountMinor          Int
+  provider             String               @db.VarChar(100)
+  providerPaymentId    String?              @db.VarChar(255)
+  idempotencyKey       String               @unique @db.Uuid
+  status               PaymentStatus        @default(PENDING)
+  reconciliationStatus ReconciliationStatus @default(UNRECONCILED)
+  refunds              Refund[]
+  receipt              Receipt?
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime             @updatedAt @db.Timestamptz(3)
+
+  @@unique([id, currency])
+  @@unique([provider, providerPaymentId])
+  @@index([appointmentId, currency])
+}
+
+model Refund {
+  id                   String               @id @default(uuid()) @db.Uuid
+  paymentId            String               @db.Uuid
+  currency             String               @db.VarChar(3)
+  payment              Payment              @relation(fields: [paymentId, currency], references: [id, currency], onDelete: Restrict)
+  amountMinor          Int
+  providerRefundId     String?              @db.VarChar(255)
+  idempotencyKey       String               @unique @db.Uuid
+  status               RefundStatus         @default(PENDING)
+  reconciliationStatus ReconciliationStatus @default(UNRECONCILED)
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime             @updatedAt @db.Timestamptz(3)
+
+  @@unique([paymentId, providerRefundId])
+  @@index([paymentId, currency])
+}
+
+// A minimal operational receipt record. Final immutable line-item snapshots are deferred.
+model Receipt {
+  id          String   @id @default(uuid()) @db.Uuid
+  number      String   @unique @db.VarChar(100)
+  paymentId   String   @unique @db.Uuid
+  currency    String   @db.VarChar(3)
+  payment     Payment  @relation(fields: [paymentId, currency], references: [id, currency], onDelete: Restrict)
+  amountMinor Int
+  issuedAt    DateTime @db.Timestamptz(3)
+
+  @@unique([paymentId, currency])
+}
+
+model MileageEntry {
+  id             String       @id @default(uuid()) @db.Uuid
+  appointmentId  String?      @db.Uuid
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  occurredOn     DateTime     @db.Date
+  distanceMeters Int
+  purpose        String       @db.VarChar(300)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([appointmentId])
+  @@index([occurredOn])
+}
+
+model Expense {
+  id                   String               @id @default(uuid()) @db.Uuid
+  appointmentId        String?              @db.Uuid
+  appointment          Appointment?         @relation(fields: [appointmentId], references: [id], onDelete: Restrict)
+  occurredOn           DateTime             @db.Date
+  category             String               @db.VarChar(100)
+  description          String               @db.VarChar(300)
+  amountMinor          Int
+  currency             String               @db.VarChar(3)
+  reconciliationStatus ReconciliationStatus @default(UNRECONCILED)
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+
+  @@index([appointmentId])
+  @@index([occurredOn])
+}
+
+// Deduplication metadata only; signature verification precedes any insert.
+model WebhookEvent {
+  id          String        @id @default(uuid()) @db.Uuid
+  provider    String        @db.VarChar(100)
+  eventId     String        @db.VarChar(255)
+  eventType   String        @db.VarChar(150)
+  status      WebhookStatus @default(RECEIVED)
+  attempts    Int           @default(0)
+  receivedAt  DateTime      @default(now()) @db.Timestamptz(3)
+  processedAt DateTime?     @db.Timestamptz(3)
+
+  @@unique([provider, eventId])
+  @@index([status, receivedAt])
+}

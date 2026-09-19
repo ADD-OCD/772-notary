@@ -1,0 +1,43 @@
+# Development only. Project runtime operations require explicit user authorization.
+name: notary772-dev
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:?Set a local DB user}:${POSTGRES_PASSWORD:?Set a local DB password}@db:5432/${POSTGRES_DB:?Set a local DB name}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [database, app]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+    security_opt: ["no-new-privileges:true"]
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:?Set a local DB user}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set a local DB password}"
+      POSTGRES_DB: "${POSTGRES_DB:?Set a local DB name}"
+    volumes:
+      - ./.local/postgres:/var/lib/postgresql/data
+    # No host port, external network, production mount, or startup migration.
+    networks: [database]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt: ["no-new-privileges:true"]
+networks:
+  database:
+    internal: true
+  app: {}

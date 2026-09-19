@@ -1,0 +1,16 @@
+# Development only. Building/running this image requires separate authorization.
+FROM node:24.21.0-bookworm-slim
+# Prisma migration tooling requires OpenSSL inside the image (no host packages changed).
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    PRISMA_HIDE_UPDATE_MESSAGE=1 \
+    XDG_CACHE_HOME=/app/.cache/xdg \
+    TMPDIR=/app/.cache/tmp
+COPY --chown=node:node . .
+RUN mkdir -p .cache/tmp .cache/xdg && chown -R node:node /app
+USER node
+RUN npm ci --ignore-scripts && npm run db:generate
+# Container interface only; Compose publishes the host port strictly on loopback.
+CMD ["./node_modules/.bin/next", "dev", "--hostname", "0.0.0.0"]
