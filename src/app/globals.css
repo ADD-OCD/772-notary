@@ -71,8 +71,7 @@
   .hero h1 { margin: 10px 0 16px; color: #fff; font-size: clamp(3.2rem, 5.35vw, 5rem); line-height: .99; text-wrap: balance; }
   .hero-lede { max-width: 600px; color: rgba(255,255,255,.93); font-size: 1.11rem; }
   .hero-actions { margin-top: 28px; display: flex; gap: 15px; }
-  .hero-script, .area-script { font-family: "Brush Script MT", "Segoe Script", cursive; font-style: italic; transform: rotate(-7deg); }
-  .hero-script { align-self: flex-end; margin: 0 25px 20px 0; color: #fff; font-size: 2.1rem; line-height: 1.05; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  .area-script { font-family: "Brush Script MT", "Segoe Script", cursive; font-style: italic; transform: rotate(-7deg); }
   .trust-row { min-height: 120px; position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; gap: 40px; border-top: 1px solid rgba(255,255,255,.18); }
   .trust-row > div { display: flex; align-items: center; gap: 18px; }
   .trust-row svg { width: 46px; height: 46px; flex: none; color: var(--gold); stroke-width: 1.6; }
@@ -88,7 +87,7 @@
   .service-card svg { width: 44px; height: 44px; margin: 0 auto 24px; color: var(--navy); stroke-width: 1.65; }
   .service-card h3 { min-height: 40px; font-size: 1rem; line-height: 1.2; }
   .service-card p { margin-top: 10px; color: #3f5363; font-size: .86rem; line-height: 1.4; }
-  .services-boundary { max-width: 840px; margin: 28px auto 0; color: var(--muted); font-size: .88rem; text-align: center; }
+  .services-boundary { max-width: 1000px; margin: 28px auto 0; color: var(--muted); font-size: .88rem; text-align: center; }
 
   .why-section { padding-top: 38px; background: #fff; }
   .why-grid { display: grid; grid-template-columns: .96fr 1.04fr; gap: 65px; align-items: stretch; }
@@ -248,7 +247,6 @@
   .hero-wash { background: linear-gradient(90deg, rgba(3,38,59,.96), rgba(3,38,59,.68)), linear-gradient(0deg, rgba(2,31,49,.9), transparent 60%); }
   .hero-inner { min-height: 550px; padding: 64px 0 45px; }
   .hero-copy { max-width: 590px; }
-  .hero-script { display: none; }
   .trust-row { padding: 24px 0; grid-template-columns: 1fr; gap: 18px; }
   .trust-row svg { width: 36px; height: 36px; }
   .split-heading, .why-grid, .faq-grid { grid-template-columns: 1fr; gap: 30px; }
