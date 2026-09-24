@@ -8,12 +8,12 @@ export const serviceOptions = [
 ] as const;
 
 export const locationOptions = [
-  ["NOTARY_OFFICE", "772 Notary Office — St. Lucie West"],
   ["HOME_OR_RESIDENCE", "Home or residence"],
   ["CUSTOMER_OFFICE", "Office"],
   ["HOSPITAL_OR_CARE_FACILITY", "Hospital or care facility"],
   ["PUBLIC_LOCATION", "Public location"],
   ["OTHER_MOBILE_LOCATION", "Other mobile location"],
+  ["NOTARY_OFFICE", "772 Notary Office — St. Lucie West"],
 ] as const;
 
 export const timeOptions = [

@@ -1,4 +1,5 @@
 import { submitNotaryRequest } from "@/modules/requests/submit";
+import { requestOriginIsAllowed } from "@/modules/requests/origin";
 import { RequestValidationError } from "@/modules/requests/validation";
 
 export const runtime = "nodejs";
@@ -9,8 +10,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Request body is too large." }, { status: 413 });
   }
 
-  const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  if (!requestOriginIsAllowed(request)) {
     return Response.json({ error: "Request origin is not allowed." }, { status: 403 });
   }
 

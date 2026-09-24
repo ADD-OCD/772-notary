@@ -45,6 +45,7 @@ export function RequestWizard() {
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const acknowledgmentRef = useRef<HTMLInputElement>(null);
   const initialRender = useRef(true);
   const today = useMemo(() => {
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -110,6 +111,7 @@ export function RequestWizard() {
     const errors = errorsForStep();
     if (Object.keys(errors).length) {
       setFieldErrors(errors);
+      if (errors.acknowledged) acknowledgmentRef.current?.focus();
       return;
     }
     if (step < 3) {
@@ -231,12 +233,12 @@ export function RequestWizard() {
           <div><dt>Contact</dt><dd>{data.customerName}<br />{data.phone} · {data.email}<br />Preferred: {optionLabel(contactOptions, data.preferredContactMethod)}</dd><button type="button" onClick={() => setStep(2)}>Edit</button></div>
           {data.notes && <div><dt>{office ? "Appointment notes" : "Access notes"}</dt><dd>{data.notes}</dd><button type="button" onClick={() => setStep(1)}>Edit</button></div>}
         </dl>
-        <label className="consent"><input aria-invalid={invalid("acknowledged")} aria-describedby={describedBy("acknowledged")} type="checkbox" checked={data.acknowledged} onChange={(event) => update("acknowledged", event.target.checked)} /><span>I understand that submitting this request does not confirm an appointment. 772 Notary will review the request and contact me about availability and appointment details using the contact information I provided.</span></label>
+        <label className="consent"><input ref={acknowledgmentRef} aria-invalid={invalid("acknowledged")} aria-describedby={fieldErrors.acknowledged ? "acknowledgment-requirement acknowledged-error" : "acknowledgment-requirement"} type="checkbox" checked={data.acknowledged} onChange={(event) => update("acknowledged", event.target.checked)} /><span id="acknowledgment-requirement">I understand that submitting this request does not confirm an appointment. 772 Notary will review the request and contact me about availability and appointment details using the contact information I provided.</span></label>
         {fieldError("acknowledged")}
       </fieldset>}
 
       {submitError && <p className="submission-error" role="alert">{submitError}</p>}
-      <div className="wizard-actions">{step > 0 ? <button className="back-button" type="button" onClick={() => { setStep((current) => current - 1); setFieldErrors({}); setSubmitError(""); }}>Back</button> : <Link className="back-button" href="/">Cancel</Link>}<button className="button button-gold" type="submit" disabled={submitting}>{step === 3 ? submitting ? "Submitting…" : "Submit Request" : "Continue"}<ArrowRightIcon /></button></div>
+      <div className="wizard-actions">{step > 0 ? <button className="back-button" type="button" onClick={() => { setStep((current) => current - 1); setFieldErrors({}); setSubmitError(""); }}>Back</button> : <Link className="back-button" href="/">Cancel</Link>}<button className={`button button-gold${step === 3 && !data.acknowledged ? " button-awaiting-acknowledgment" : ""}`} type="submit" disabled={submitting}>{step === 3 ? submitting ? "Submitting…" : "Submit Request" : "Continue"}<ArrowRightIcon /></button></div>
     </form>
   </section>;
 }

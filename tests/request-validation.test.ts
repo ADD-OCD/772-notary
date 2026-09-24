@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   changeRequestLocation,
+  locationOptions,
   type RequestSubmission,
 } from "../src/modules/requests/request-data";
 import {
@@ -39,6 +40,17 @@ function fieldErrors(payload: RequestSubmission) {
     return error.fieldErrors;
   }
 }
+
+test("appointment locations keep the notary office last in logical order", () => {
+  assert.deepEqual(locationOptions.map(([, label]) => label), [
+    "Home or residence",
+    "Office",
+    "Hospital or care facility",
+    "Public location",
+    "Other mobile location",
+    "772 Notary Office — St. Lucie West",
+  ]);
+});
 
 test("phone, email, and preferred contact method are required server-side", () => {
   const payload = valid();

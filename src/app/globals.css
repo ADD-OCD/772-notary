@@ -216,6 +216,8 @@
   .consent input { margin-top: 3px; accent-color: var(--navy); }
   .wizard-actions { margin-top: 30px; padding-top: 22px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); }
   .wizard-actions .button { border: 0; cursor: pointer; }
+  .wizard-actions .button-awaiting-acknowledgment { color: #526676; background: #dfe4e6; box-shadow: none; }
+  .wizard-actions .button-awaiting-acknowledgment:hover { background: #d6dcdf; box-shadow: none; transform: none; }
   .back-button { padding: 10px 0; color: var(--navy); background: none; border: 0; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
   .completion { min-height: 550px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
   .completion-icon { width: 68px; height: 68px; margin-bottom: 22px; display: grid; place-items: center; color: var(--navy); background: var(--gold); border-radius: 50%; }
